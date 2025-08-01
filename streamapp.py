@@ -10,11 +10,11 @@ from contextlib import contextmanager
 @contextmanager
 def get_db_connection():
     conn = psycopg2.connect(
-    host="db.basdqhhiafhluisbnoqi.supabase.co",
-    port="5432",
-    dbname="postgres",  # Default name unless changed
-    user="postgres",
-    password="Ragunathan28"
+        host=st.secrets["postgres"]["host"],
+        dbname=st.secrets["postgres"]["dbname"],
+        user=st.secrets["postgres"]["user"],
+        password=st.secrets["postgres"]["password"],
+        port=st.secrets["postgres"]["port"]
     )
     try:
         yield conn
