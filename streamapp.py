@@ -2,19 +2,31 @@ import streamlit as st
 import psycopg2
 import pandas as pd
 import altair as alt
+from contextlib import contextmanager
 
-# Database connection
-conn = psycopg2.connect(
-    dbname="food_waste_db",
+# ======================
+# Supabase DB Connection
+# ======================
+@contextmanager
+def get_db_connection():
+    conn = psycopg2.connect(
+    host="db.basdqhhiafhluisbnoqi.supabase.co",
+    port="5432",
+    dbname="postgres",  # Default name unless changed
     user="postgres",
-    password="1234",
-    host="localhost",
-    port="5432"
-)
+    password="Ragunathan28"
+    )
+    try:
+        yield conn
+    finally:
+        conn.close()
 
-# Query runner
+# ======================
+# Query Runner
+# ======================
 def run_query(query):
-    return pd.read_sql_query(query, conn)
+    with get_db_connection() as conn:
+        return pd.read_sql_query(query, conn)
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
@@ -32,14 +44,14 @@ if section == "Query Dashboard":
 
     query_options = {
         "Providers & Receivers by City": """
-            SELECT
-                COALESCE(p."City", r."City") AS city,
-                COUNT(DISTINCT p."Provider_ID") AS total_providers,
-                COUNT(DISTINCT r."Receiver_ID") AS total_receivers
-            FROM providers p
-            FULL OUTER JOIN receivers r ON p."City" = r."City"
-            GROUP BY COALESCE(p."City", r."City")
-            ORDER BY city;
+           SELECT
+    COALESCE(p.city, r.city) AS city,
+    COUNT(DISTINCT p.provider_id) AS total_providers,
+    COUNT(DISTINCT r.receiver_id) AS total_receivers
+FROM providers p
+FULL OUTER JOIN receivers r ON p.city = r.city
+GROUP BY COALESCE(p.city, r.city)
+ORDER BY city;
         """,
         "Top Contributing Provider Type": """
             SELECT "Type", COUNT(*) AS food_count
@@ -267,4 +279,5 @@ elif section == "Data Analysis & Visualization":
         tooltip=["Status", "count"]
     ).properties(width=500, height=400)
     st.altair_chart(chart3)
+
 
